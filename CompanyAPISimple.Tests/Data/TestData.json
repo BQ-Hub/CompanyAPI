@@ -1,0 +1,40 @@
+[
+  {
+    "ID": "1",
+    "isin": "US1104193065",
+    "name": "British Airways Plc",
+    "exchange": "Pink Sheets",
+    "ticker": "BAIRY"
+  },
+  {
+    "ID": "2",
+    "isin": "US0378331005",
+    "name": "Apple Inc.",
+    "exchange": "NASDAQ",
+    "ticker": "AAPL",
+    "website": "http://www.apple.com"
+  },
+  {
+    "ID": "3",
+    "isin": "NL0000009165",
+    "name": "Heineken NV",
+    "exchange": "Euronext Amsterdam",
+    "ticker": "HEIA"
+  },
+  {
+    "ID": "4",
+    "isin": "JP3866800000",
+    "name": "Panasonic Corp",
+    "exchange": "Tokyo Stock Exchange",
+    "ticker": "6752",
+    "website": "http://www.panasonic.co.jp"
+  },
+  {
+    "ID": "5",
+    "isin": "DE000PAH0038",
+    "name": "Porsche Automobil ",
+    "exchange": "Deutsche Börse",
+    "ticker": "PAH3",
+    "website": "https://www.porsche.com/"
+  }
+]

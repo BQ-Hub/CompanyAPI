@@ -1,0 +1,57 @@
+﻿@model CompanyAPISimple.Models.CompanyModel
+
+@{
+    ViewBag.Title = "Company Details";
+}
+
+    <h2>Company Details of @Html.DisplayFor(model => model.name)</h2>
+
+    <div>
+        <hr />
+        <dl class="dl-horizontal">
+            <dt>
+                @Html.DisplayNameFor(model => model.Isin)
+            </dt>
+
+            <dd>
+                @Html.DisplayFor(model => model.Isin)
+            </dd>
+
+            <dt>
+                @Html.DisplayNameFor(model => model.name)
+            </dt>
+
+            <dd>
+                @Html.DisplayFor(model => model.name)
+            </dd>
+
+            <dt>
+                @Html.DisplayNameFor(model => model.exchange)
+            </dt>
+
+            <dd>
+                @Html.DisplayFor(model => model.exchange)
+            </dd>
+
+            <dt>
+                @Html.DisplayNameFor(model => model.ticker)
+            </dt>
+
+            <dd>
+                @Html.DisplayFor(model => model.ticker)
+            </dd>
+
+            <dt>
+                @Html.DisplayNameFor(model => model.website)
+            </dt>
+
+            <dd>
+                <a href="@Html.DisplayFor(model => model.website)">@Html.DisplayFor(model => model.website)</a>
+            </dd>
+
+        </dl>
+    </div>
+<p>
+    @Html.ActionLink("Update", "Update", new { id = Model.Id }) |
+    @Html.ActionLink("Back to List", "Index")
+</p>
