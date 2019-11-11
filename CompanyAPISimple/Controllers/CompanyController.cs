@@ -19,24 +19,47 @@ namespace CompanyAPISimple.Controllers
         {
             _dataHandler = dataHandler;
         }
-        public List<CompanyModel> GetCompanies()
+        public IHttpActionResult GetCompanies()
         {
-
-            return _dataHandler.GetCompanies();
+            List<CompanyModel> companies = _dataHandler.GetCompanies();
+            if (companies == null)
+            {
+                return NotFound();
+            }
+            else
+            {
+                return Ok(companies);
+            }
         }
 
         [Route("{id:int}")]
         [HttpGet]
-        public CompanyModel GetCompanyById(int Id)
+        public IHttpActionResult GetCompanyById(int Id)
         {           
-            return _dataHandler.GetCompanyById(Id);
+            CompanyModel company = _dataHandler.GetCompanyById(Id);
+            if(company == null)
+            {
+                return NotFound();
+            }
+            else
+            {
+                return Ok(company);
+            }           
         }
 
         [Route("{isin}")]
         [HttpGet]
-        public CompanyModel GetCompanyByISIN(string isin)
+        public IHttpActionResult GetCompanyByISIN(string isin)
         {
-            return _dataHandler.GetCompanyByISIN(isin);
+            CompanyModel company = _dataHandler.GetCompanyByISIN(isin);
+            if (company == null)
+            {
+                return NotFound();
+            }
+            else
+            {
+                return Ok(company);
+            }
         }
 
         [Route("CreateCompany")]
@@ -48,7 +71,7 @@ namespace CompanyAPISimple.Controllers
                 return BadRequest(ModelState);
             }
 
-            if (GetCompanyByISIN(company.Isin)?.Isin == null)
+            if (_dataHandler.GetCompanyByISIN(company.Isin) == null)
             {
                 _dataHandler.CreateCompany(company);
             }
@@ -69,7 +92,7 @@ namespace CompanyAPISimple.Controllers
                 return BadRequest(ModelState);
             }
             
-            if (GetCompanyByISIN(company.Isin)?.Isin != null)
+            if (_dataHandler.GetCompanyByISIN(company.Isin) != null)
             {
                 _dataHandler.UpdateCompany(company);
             }

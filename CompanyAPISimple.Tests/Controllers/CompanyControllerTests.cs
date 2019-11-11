@@ -9,6 +9,10 @@ using CompanyAPISimple.Tests.Helpers;
 using CompanyAPISimple.Models;
 using System.IO;
 using Newtonsoft.Json;
+using System.Threading;
+using System.Net;
+using System.Web.Http.Results;
+using System.Web.Http;
 
 namespace CompanyAPISimple.Controllers.Tests
 {
@@ -20,14 +24,15 @@ namespace CompanyAPISimple.Controllers.Tests
         {
             // Arrange
             CompanyController controller = new CompanyController(new TestDataHandler());
-
             // Act
-            IEnumerable<CompanyModel> result = controller.GetCompanies();
+            IHttpActionResult actionResult = controller.GetCompanies();
+            
+            OkNegotiatedContentResult<List<CompanyModel>> contentResult = actionResult as OkNegotiatedContentResult<List<CompanyModel>>;
 
             // Assert
-            Assert.IsNotNull(result);
-            
-            Assert.AreEqual(5, result.Count());
+            Assert.IsNotNull(contentResult);
+            Assert.IsNotNull(contentResult.Content);           
+            Assert.AreEqual(5, contentResult.Content.Count());
         }
 
         [TestMethod()]
@@ -38,14 +43,15 @@ namespace CompanyAPISimple.Controllers.Tests
             CompanyModel expectedCompany = new CompanyModel { Isin = "US0378331005", exchange = "NASDAQ", name = "Apple Inc.", ticker = "AAPL", website = "http://www.apple.com" };
 
             // Act
-            CompanyModel actualCompany = controller.GetCompanyById(2);
+            IHttpActionResult actionResult = controller.GetCompanyById(2);
+            OkNegotiatedContentResult<CompanyModel> actualCompany = actionResult as OkNegotiatedContentResult<CompanyModel>;
 
             // Assert
             Assert.IsNotNull(actualCompany);
             
-            Assert.AreEqual(expectedCompany, actualCompany);
+            Assert.AreEqual(expectedCompany, actualCompany.Content);
         }
-
+        
         [TestMethod()]
         public void GetCompanyByISINTest()
         {
@@ -54,12 +60,13 @@ namespace CompanyAPISimple.Controllers.Tests
             CompanyModel expectedCompany = new CompanyModel { Isin = "US0378331005", exchange = "NASDAQ", name = "Apple Inc.", ticker = "AAPL", website = "http://www.apple.com" };
 
             // Act
-            CompanyModel actualCompany = controller.GetCompanyByISIN("US0378331005");
+            IHttpActionResult actionResult = controller.GetCompanyByISIN("US0378331005");
+            OkNegotiatedContentResult<CompanyModel> actualCompany = actionResult as OkNegotiatedContentResult<CompanyModel>;
 
             // Assert
             Assert.IsNotNull(actualCompany);
-            
-            Assert.AreEqual(expectedCompany, actualCompany);            
+            Assert.AreEqual("US0378331005", actualCompany.Content.Isin);
+            Assert.AreEqual(expectedCompany, actualCompany.Content);            
             
         }
 
@@ -67,15 +74,17 @@ namespace CompanyAPISimple.Controllers.Tests
         public void CreateCompanyTest()
         {
             // Arrange
-            CompanyController controller = new CompanyController(new TestDataHandler());
-            IEnumerable<CompanyModel> companyList = controller.GetCompanies();
+            CompanyController controller = new CompanyController(new TestDataHandler());            
             CompanyModel company = new CompanyModel { Isin = "IE1234567899", exchange = "ISEQ", name = "Brian Inc", ticker = "BAJQ", website = "https://www.startrek.com" };
 
             // Act
             var result = controller.CreateCompany(company);
-            result.GetType();
+            IHttpActionResult actionResult = controller.GetCompanies();
+
+            OkNegotiatedContentResult<List<CompanyModel>> companyList = actionResult as OkNegotiatedContentResult<List<CompanyModel>>;
+
             // Assert
-            Assert.IsTrue(companyList.Contains(company));
+            Assert.IsTrue(companyList.Content.Contains(company));
         }
 
         [TestMethod()]
@@ -83,14 +92,24 @@ namespace CompanyAPISimple.Controllers.Tests
         {
             // Arrange
             CompanyController controller = new CompanyController(new TestDataHandler());
-            IEnumerable<CompanyModel> companyList = controller.GetCompanies();            
+            IHttpActionResult expectedActionResult = controller.GetCompanies();
+
+            OkNegotiatedContentResult<List<CompanyModel>> expectedCompanyList = expectedActionResult as OkNegotiatedContentResult<List<CompanyModel>>;
+
+            int expectedCount = expectedCompanyList.Content.Count;
 
             // Act
-            var result = controller.CreateCompany(companyList.First());
+            // Try to add an existing company to the list
+            IHttpActionResult result = controller.CreateCompany(expectedCompanyList.Content.First());
+            NegotiatedContentResult<string> response = result as NegotiatedContentResult<string>;
+
+            IHttpActionResult actualActionResult = controller.GetCompanies();
+            OkNegotiatedContentResult<List<CompanyModel>> actualCompanyList = actualActionResult as OkNegotiatedContentResult<List<CompanyModel>>;
 
             // Assert
-            //Assert.IsTrue(companyList.Contains(company));
             Assert.IsNotNull(result);
+            Assert.IsTrue(response.StatusCode == HttpStatusCode.BadRequest);
+            Assert.IsTrue(actualCompanyList.Content.Count == expectedCount);
 
         }
 
@@ -98,31 +117,35 @@ namespace CompanyAPISimple.Controllers.Tests
         public void UpdateCompanyTest()
         {
             // Arrange
-            CompanyController controller = new CompanyController(new TestDataHandler());            
+            CompanyController controller = new CompanyController(new TestDataHandler());
             CompanyModel expectedCompany = new CompanyModel { Isin = "IE1234567899", exchange = "ISEQ", name = "Brian Inc", ticker = "BAJQ", website = "https://www.startrek.com" };
             controller.CreateCompany(expectedCompany);
 
             // Act            
             var result = controller.UpdateCompany(new CompanyModel { Isin = "IE1234567899", exchange = "NASDAQ", name = "Brian Q Inc", ticker = "BAJQ", website = "https://www.starwars.com" });
-
-            CompanyModel actualCompany = controller.GetCompanyByISIN("IE1234567899");
+            IHttpActionResult actionResult = controller.GetCompanyByISIN("IE1234567899");
+            OkNegotiatedContentResult<CompanyModel> actualCompany = actionResult as OkNegotiatedContentResult<CompanyModel>;
 
             // Assert
-            Assert.AreEqual(expectedCompany.Isin, actualCompany.Isin);
-            Assert.AreNotEqual(expectedCompany, actualCompany);            
+            Assert.AreEqual(expectedCompany.Isin, actualCompany.Content.Isin);
+            Assert.AreNotEqual(expectedCompany, actualCompany.Content);
         }
 
-        public List<CompanyModel> LoadTestData()
+        [TestMethod()]
+        public void UpdateNonExistentCompanyTest()
         {
-            List<CompanyModel> companyList = new List<CompanyModel>();
+            // Arrange
+            CompanyController controller = new CompanyController(new TestDataHandler());
 
-            using (StreamReader r = new StreamReader("./Data/TestData.json"))
-            {
-                string json = r.ReadToEnd();
-                companyList = JsonConvert.DeserializeObject<List<CompanyModel>>(json);
-            }
+            // Act            
+            IHttpActionResult result = controller.UpdateCompany(new CompanyModel { Isin = "IE1234567899", exchange = "NASDAQ", name = "Brian Q Inc", ticker = "BAJQ", website = "https://www.starwars.com" });
+            NegotiatedContentResult<string> response = result as NegotiatedContentResult<string>;
 
-            return companyList;
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.IsTrue(response.StatusCode == HttpStatusCode.BadRequest);
+
         }
+
     }
 }

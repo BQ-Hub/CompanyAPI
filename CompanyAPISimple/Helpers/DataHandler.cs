@@ -10,17 +10,38 @@ using System.Data;
 
 namespace CompanyAPISimple.Helpers
 {
+    /// <summary>
+    /// Database access implementation using Dapper
+    /// </summary>
     public class DataHandler : IDataHandler
     {
+        /// <summary>
+        /// Calls dbo.CreateCompany
+        /// </summary>
+        /// <param name="company"></param>
+        /// <returns></returns>
         public string CreateCompany(CompanyModel company)
         {
             using (IDbConnection connection = new System.Data.SqlClient.SqlConnection(ConfigurationManager.ConnectionStrings["GlassLewis"].ConnectionString))
             {
-                var output = connection.ExecuteReader("dbo.CreateCompany @Isin, @Name, @Exchange, @Ticker, @website", new { Isin = company.Isin, Name = company.name, Exchange = company.exchange, Ticker = company.ticker, website = company.website });
-                return output.GetString(0);
+                DynamicParameters queryParams = new DynamicParameters();
+
+                queryParams.Add("@Isin", dbType: DbType.String, direction: ParameterDirection.Input, value: company.Isin);
+                queryParams.Add("@Name", dbType: DbType.String, direction: ParameterDirection.Input, value: company.name);
+                queryParams.Add("@Exchange", dbType: DbType.String, direction: ParameterDirection.Input, value: company.exchange);
+                queryParams.Add("@Ticker", dbType: DbType.String, direction: ParameterDirection.Input, value: company.ticker);
+                queryParams.Add("@website", dbType: DbType.String, direction: ParameterDirection.Input, value: company.website);
+                queryParams.Add("@return", dbType: DbType.String, direction: ParameterDirection.Input);
+
+                connection.Execute("dbo.CreateCompany @Isin, @Name, @Exchange, @Ticker, @website", param: queryParams);
+                return queryParams.Get<string>("@return"); ;
             }
         }
 
+        /// <summary>
+        /// Get a list of all companies
+        /// </summary>
+        /// <returns></returns>
         public List<CompanyModel> GetCompanies()
         {
             using (IDbConnection connection = new System.Data.SqlClient.SqlConnection(ConfigurationManager.ConnectionStrings["GlassLewis"].ConnectionString))
@@ -30,6 +51,11 @@ namespace CompanyAPISimple.Helpers
             }
         }
 
+        /// <summary>
+        /// Get Companies by Id
+        /// </summary>
+        /// <param name="Id"></param>
+        /// <returns></returns>
         public CompanyModel GetCompanyById(int Id)
         {
             using (IDbConnection connection = new System.Data.SqlClient.SqlConnection(ConfigurationManager.ConnectionStrings["GlassLewis"].ConnectionString))
@@ -39,6 +65,11 @@ namespace CompanyAPISimple.Helpers
             }
         }
 
+        /// <summary>
+        /// Get Companies by ISIN
+        /// </summary>
+        /// <param name="ISIN"></param>
+        /// <returns></returns>
         public CompanyModel GetCompanyByISIN(string ISIN)
         {
             using (IDbConnection connection = new System.Data.SqlClient.SqlConnection(ConfigurationManager.ConnectionStrings["GlassLewis"].ConnectionString))
@@ -48,12 +79,27 @@ namespace CompanyAPISimple.Helpers
             }
         }
 
+        /// <summary>
+        /// Update Company. Keyed on ISIN
+        /// </summary>
+        /// <param name="company"></param>
+        /// <returns></returns>
         public string UpdateCompany(CompanyModel company)
         {
             using (IDbConnection connection = new System.Data.SqlClient.SqlConnection(ConfigurationManager.ConnectionStrings["GlassLewis"].ConnectionString))
             {
-                var output = connection.ExecuteReader("dbo.UpdateCompany @Isin, @Name, @Exchange, @Ticker, @website", new { Isin = company.Isin, Name = company.name, Exchange = company.exchange, Ticker = company.ticker, website = company.website });
-                return output.GetString(0);
+                DynamicParameters queryParams = new DynamicParameters();
+
+                queryParams.Add("@Isin", dbType: DbType.String, direction: ParameterDirection.Input, value: company.Isin);
+                queryParams.Add("@Name", dbType: DbType.String, direction: ParameterDirection.Input, value: company.name);
+                queryParams.Add("@Exchange", dbType: DbType.String, direction: ParameterDirection.Input, value: company.exchange);
+                queryParams.Add("@Ticker", dbType: DbType.String, direction: ParameterDirection.Input, value: company.ticker);
+                queryParams.Add("@website", dbType: DbType.String, direction: ParameterDirection.Input, value: company.website);
+                queryParams.Add("@return", dbType: DbType.String, direction: ParameterDirection.Input);
+
+                connection.Execute("dbo.UpdateCompany @Isin, @Name, @Exchange, @Ticker, @website", param: queryParams);
+                
+                return queryParams.Get<string>("@return");
             }
         }
     }
